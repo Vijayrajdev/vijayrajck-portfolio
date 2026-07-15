@@ -142,7 +142,7 @@ export const PORTFOLIO_DATA = {
     {
       id: "next-mission",
       name: "Next Mission",
-      tagline: "Slot Reserved — In Development",
+      tagline: "Slot Reserved — In Dev",
       description:
         "The next build is being charted on the launchpad. Telemetry incoming — check back soon for the reveal.",
       tech: ["Classified"],
