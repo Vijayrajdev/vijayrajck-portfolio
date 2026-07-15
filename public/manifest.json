@@ -1,0 +1,31 @@
+{
+  "name": "Vijay Raj CK — Senior Data Engineer",
+  "short_name": "Vijay Raj CK",
+  "description": "Portfolio of Vijay Raj CK, Senior Data Engineer — GCP, BigQuery, Terraform, dbt, Agentic AI.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070312",
+  "theme_color": "#070312",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

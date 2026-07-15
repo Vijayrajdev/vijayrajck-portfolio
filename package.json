@@ -1,0 +1,32 @@
+{
+  "name": "vijay-portfolio",
+  "description": "Space-themed 3D portfolio of Vijay Raj C K — Senior Data Engineer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/orbitron": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.10",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@tailwindcss/vite": "^4.3.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "simple-icons": "^16.26.0",
+    "tailwindcss": "^4.3.2",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "oxlint": "^1.71.0",
+    "vite": "^8.1.1"
+  }
+}
