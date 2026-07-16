@@ -87,24 +87,28 @@ export const PORTFOLIO_DATA = {
       issuer: "Ingram Micro",
       year: "2025",
       accent: "#a855f7",
+      icon: "supernova",
     },
     {
       name: "Rock Star Award",
       issuer: "Ingram Micro",
       year: "2025",
       accent: "#22d3ee",
+      icon: "bolt",
     },
     {
       name: "Dashing Debut Award",
       issuer: "Ingram Micro",
       year: "2024",
       accent: "#f472b6",
+      icon: "rocket",
     },
     {
       name: "Best Outgoing Student",
       issuer: "Jerusalem College of Engineering",
       year: "2023",
       accent: "#fbbf24",
+      icon: "gradcap",
     },
   ],
 
