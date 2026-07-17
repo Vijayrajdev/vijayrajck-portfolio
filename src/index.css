@@ -14,6 +14,11 @@
   --bg-dark: radial-gradient(1200px 800px at 80% -10%, #2a1458 0%, transparent 55%),
     radial-gradient(1000px 700px at -10% 40%, #0b1e4d 0%, transparent 50%),
     radial-gradient(900px 900px at 60% 110%, #3d0f3f 0%, transparent 55%), #05020f;
+  --panel-backdrop: var(--bg-light);
+}
+
+.dark {
+  --panel-backdrop: var(--bg-dark);
 }
 
 html {
@@ -38,9 +43,32 @@ body {
 }
 
 /* ---- Extreme Glassmorphism ----
-   translateZ(0) promotes each panel to its own compositor layer — without it,
-   Chromium on Windows/Linux can fail to apply backdrop-filter over the WebGL
-   canvas behind the page (stale or missing blur). */
+   Two-layer strategy so the frost NEVER disappears cross-OS:
+   1. A built-in "frost plate" (::before) paints the page's own nebula
+      gradient, viewport-anchored and blurred with plain filter: blur() —
+      supported everywhere, unlike backdrop-filter, which Windows/Linux
+      browsers drop on many GPU configs.
+   2. backdrop-filter stays as an enhancement layer that also blurs the
+      moving WebGL particles where it works (macOS, iOS, healthy GPUs).
+   translateZ(0) keeps each panel on its own compositor layer. */
+.glass,
+.glass-deep {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass::before,
+.glass-deep::before {
+  content: '';
+  position: absolute;
+  inset: -48px;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--panel-backdrop);
+  background-attachment: fixed;
+  filter: blur(28px) saturate(160%);
+}
+
 .glass {
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
@@ -81,36 +109,6 @@ body {
     0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
-/* Fallback for browsers/GPUs where backdrop-filter is unavailable or
-   blocklisted (disabled hardware acceleration, some Linux drivers, older
-   Firefox ESR): the blur itself cannot exist there, so keep REAL transparency
-   — a translucent tint with a whisper of sheen — and let the starfield show
-   through crisply. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass {
-    background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 60%),
-      rgba(244, 246, 255, 0.62);
-  }
-
-  .dark .glass {
-    background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 60%),
-      rgba(22, 17, 52, 0.55);
-  }
-
-  .glass-deep {
-    background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 60%),
-      rgba(247, 248, 255, 0.72);
-  }
-
-  .dark .glass-deep {
-    background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 60%),
-      rgba(14, 10, 36, 0.68);
-  }
-}
 
 /* ---- Scroll reveal ---- */
 .reveal {
