@@ -8,7 +8,7 @@ export const PORTFOLIO_DATA = {
     phone: "+91 9150199456",
     linkedin: "https://linkedin.com/in/vijay-raj-02",
     github: "https://github.com/Vijayrajdev",
-    website: "https://vijay-portfolio2-0.vercel.app",
+    website: "https://vijayrajck.vercel.app",
     location: "Chennai, India",
     resume: "/Vijay_Raj_CK_Senior_Data_Engineer_3YOE.pdf",
     avatar: "/avatar.jpg",
