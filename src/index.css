@@ -42,37 +42,15 @@ body {
   font-family: var(--font-display);
 }
 
-/* ---- Extreme Glassmorphism ----
-   Two-layer strategy so the frost NEVER disappears cross-OS:
-   1. A built-in "frost plate" (::before) paints the page's own nebula
-      gradient, viewport-anchored and blurred with plain filter: blur() —
-      supported everywhere, unlike backdrop-filter, which Windows/Linux
-      browsers drop on many GPU configs.
-   2. backdrop-filter stays as an enhancement layer that also blurs the
-      moving WebGL particles where it works (macOS, iOS, healthy GPUs).
-   translateZ(0) keeps each panel on its own compositor layer. */
-.glass,
-.glass-deep {
-  position: relative;
-  overflow: hidden;
-}
-
-.glass::before,
-.glass-deep::before {
-  content: '';
-  position: absolute;
-  inset: -48px;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--panel-backdrop);
-  background-attachment: fixed;
-  filter: blur(28px) saturate(160%);
-}
-
+/* ---- Extreme Glassmorphism (the macOS look, untouched) ----
+   Pure live backdrop blur. On machines where the browser cannot render
+   backdrop-filter (GPU compositing off / software rendering — common on
+   Windows with blocklisted drivers), main.jsx detects it and stamps
+   .no-backdrop on <html>, which switches panels to the frost-plate emulation
+   below. Capable machines never take that path. */
 .glass {
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
-  transform: translateZ(0);
   background: rgba(255, 255, 255, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow:
@@ -91,7 +69,6 @@ body {
 .glass-deep {
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
-  transform: translateZ(0);
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow:
@@ -107,6 +84,42 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     inset 0 -1px 0 rgba(255, 255, 255, 0.04),
     0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* ---- Frost-plate emulation, ONLY under .no-backdrop ----
+   Each panel clips a viewport-anchored copy of the nebula background,
+   blurred with plain filter: blur() (works even in software rendering).
+   Because it is anchored to the viewport, every panel shows the correctly
+   aligned slice of the backdrop — visually equivalent to backdrop-filter
+   over the static background. */
+.no-backdrop .glass,
+.no-backdrop .glass-deep {
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.no-backdrop .glass::before,
+.no-backdrop .glass-deep::before {
+  content: '';
+  position: absolute;
+  inset: -48px;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--panel-backdrop);
+  background-attachment: fixed;
+  filter: blur(26px) saturate(150%);
+}
+
+/* fixed-attachment sampling needs a transform-free ancestor chain, so this
+   mode settles reveals and card hovers without translation. */
+.no-backdrop .reveal {
+  transform: none;
+}
+
+.no-backdrop .card-lift:hover {
+  transform: none;
 }
 
 
