@@ -4,6 +4,7 @@ import { Float, PerspectiveCamera, View } from '@react-three/drei'
 import * as THREE from 'three'
 import { siApacheairflow, siGooglebigquery, siGooglepubsub, siLooker } from 'simple-icons'
 import { useLogoGeometry } from './useLogoGeometry.js'
+import { WEBGL_AVAILABLE } from '../../utils/capabilities.js'
 
 // A living GCP data pipeline built from the actual product logos:
 // Sources → Pub/Sub → Composer (Airflow) → BigQuery → Looker, with a dbt
@@ -230,10 +231,41 @@ function Rig({ rotRef, children }) {
   return <group ref={group}>{children}</group>
 }
 
+// DOM rendition of the same pipeline for machines without WebGL: the chip
+// chain keeps the hero informative instead of showing an empty window.
+function PipelineFallback() {
+  const stages = NODES.filter((n) => n.label)
+  return (
+    <div className="flex h-full w-full flex-wrap content-center items-center justify-center gap-x-2 gap-y-4 px-6">
+      {stages.map((node, i) => (
+        <div key={node.id} className="flex items-center gap-2">
+          <span
+            className="font-display rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.15em] whitespace-nowrap"
+            style={{
+              color: node.color,
+              border: `1px solid ${node.color}88`,
+              boxShadow: `0 0 14px ${node.color}44`,
+            }}
+          >
+            {node.label}
+          </span>
+          {i < stages.length - 1 && (
+            <span className="text-slate-400 dark:text-slate-500" aria-hidden="true">
+              →
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function PipelineScene({ theme }) {
   const dark = theme === 'dark'
   const rotRef = useRef({ x: 0, y: 0 })
   const drag = useRef(null)
+
+  if (!WEBGL_AVAILABLE) return <PipelineFallback />
 
   const onPointerDown = (e) => {
     e.currentTarget.setPointerCapture(e.pointerId)

@@ -38,6 +38,34 @@ body {
   color: #e2e8f0;
 }
 
+/* CSS starfield behind everything — keeps the space texture (and gives the
+   glass something to frost) even on machines where WebGL never starts. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 22px 34px, rgba(99, 102, 241, 0.4), transparent 100%),
+    radial-gradient(1px 1px at 128px 90px, rgba(56, 189, 248, 0.35), transparent 100%),
+    radial-gradient(1.5px 1.5px at 76px 158px, rgba(139, 92, 246, 0.3), transparent 100%),
+    radial-gradient(1px 1px at 190px 45px, rgba(30, 41, 59, 0.25), transparent 100%);
+  background-size:
+    210px 210px,
+    260px 260px,
+    320px 320px,
+    240px 240px;
+}
+
+.dark body::before {
+  background-image:
+    radial-gradient(1px 1px at 22px 34px, rgba(255, 255, 255, 0.8), transparent 100%),
+    radial-gradient(1px 1px at 128px 90px, rgba(226, 232, 240, 0.55), transparent 100%),
+    radial-gradient(1.5px 1.5px at 76px 158px, rgba(167, 139, 250, 0.6), transparent 100%),
+    radial-gradient(1.2px 1.2px at 190px 45px, rgba(103, 232, 249, 0.5), transparent 100%);
+}
+
 .font-display {
   font-family: var(--font-display);
 }

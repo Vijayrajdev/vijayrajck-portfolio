@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Float, PerspectiveCamera, View } from '@react-three/drei'
 import * as THREE from 'three'
+import { WEBGL_AVAILABLE } from '../../utils/capabilities.js'
 
 // Distinct sculpture per project, draggable in 3D (click + drag to rotate,
 // eases back home on release).
@@ -119,6 +120,21 @@ export default function ProjectStage({ project, theme }) {
   const dark = theme === 'dark'
   const rotRef = useRef({ x: 0, y: 0 })
   const drag = useRef(null)
+
+  // No WebGL: a glowing accent orb keeps the card art instead of an empty box.
+  if (!WEBGL_AVAILABLE) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div
+          className="h-24 w-24 animate-pulse rounded-full"
+          style={{
+            background: `radial-gradient(circle at 35% 30%, ${project.accent}, ${project.accent}22 70%)`,
+            boxShadow: `0 0 60px ${project.accent}66`,
+          }}
+        />
+      </div>
+    )
+  }
 
   const onPointerDown = (e) => {
     e.currentTarget.setPointerCapture(e.pointerId)

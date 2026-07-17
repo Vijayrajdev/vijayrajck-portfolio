@@ -12,6 +12,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { usePWAInstall } from './hooks/usePWAInstall.js'
 import { useReveal } from './hooks/useReveal.js'
 import { PORTFOLIO_DATA } from './data/portfolio.js'
+import { WEBGL_AVAILABLE } from './utils/capabilities.js'
 
 const BackgroundScene = lazy(() => import('./components/three/BackgroundScene.jsx'))
 
@@ -22,10 +23,13 @@ export default function App() {
 
   return (
     <div ref={revealRef} className="relative min-h-screen">
-      {/* Layer 0: deep-space background scene */}
-      <Suspense fallback={null}>
-        <BackgroundScene theme={theme} key={theme} />
-      </Suspense>
+      {/* Layer 0: deep-space background scene (CSS starfield stands in when
+          WebGL is unavailable) */}
+      {WEBGL_AVAILABLE && (
+        <Suspense fallback={null}>
+          <BackgroundScene theme={theme} key={theme} />
+        </Suspense>
+      )}
 
       {/* Layer 10: glass DOM content (View placeholders live here) */}
       <div className="relative z-10">
@@ -59,7 +63,7 @@ export default function App() {
       </div>
 
       {/* Layer 20: shared WebGL overlay rendering all in-page 3D views */}
-      <OverlayCanvas />
+      {WEBGL_AVAILABLE && <OverlayCanvas />}
 
       {/* Layer 50: navigation above everything */}
       <div className="relative z-50">

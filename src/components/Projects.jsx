@@ -3,6 +3,7 @@ import BrandIcon from './BrandIcon.jsx'
 import { PORTFOLIO_DATA } from '../data/portfolio.js'
 import { SOCIAL_ICONS } from '../data/socials.js'
 import ProjectStage from './three/ProjectStage.jsx'
+import { WEBGL_AVAILABLE } from '../utils/capabilities.js'
 
 export default function Projects({ theme }) {
   return (
@@ -11,7 +12,11 @@ export default function Projects({ theme }) {
         chapter="03"
         label="Missions"
         title="Projects"
-        subtitle="Drag the 3D displays to rotate them — every mission ships with its own artifact."
+        subtitle={
+          WEBGL_AVAILABLE
+            ? 'Drag the 3D displays to rotate them — every mission ships with its own artifact.'
+            : 'Every mission ships with its own artifact.'
+        }
       />
 
       <div className="grid gap-6 sm:grid-cols-2">
