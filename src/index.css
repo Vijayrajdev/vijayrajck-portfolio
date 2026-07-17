@@ -37,10 +37,14 @@ body {
   font-family: var(--font-display);
 }
 
-/* ---- Extreme Glassmorphism ---- */
+/* ---- Extreme Glassmorphism ----
+   translateZ(0) promotes each panel to its own compositor layer — without it,
+   Chromium on Windows/Linux can fail to apply backdrop-filter over the WebGL
+   canvas behind the page (stale or missing blur). */
 .glass {
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
+  transform: translateZ(0);
   background: rgba(255, 255, 255, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow:
@@ -59,6 +63,7 @@ body {
 .glass-deep {
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
+  transform: translateZ(0);
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow:
@@ -74,6 +79,36 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     inset 0 -1px 0 rgba(255, 255, 255, 0.04),
     0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* Fallback for browsers/GPUs where backdrop-filter is unavailable or
+   blocklisted (older Firefox ESR, disabled hardware acceleration, some Linux
+   drivers): swap the see-through film for opaque tinted glass with a soft
+   sheen, so panels stay readable over the starfield. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background:
+      linear-gradient(150deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%),
+      rgba(244, 246, 255, 0.9);
+  }
+
+  .dark .glass {
+    background:
+      linear-gradient(150deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 55%),
+      rgba(20, 15, 48, 0.92);
+  }
+
+  .glass-deep {
+    background:
+      linear-gradient(150deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 55%),
+      rgba(247, 248, 255, 0.94);
+  }
+
+  .dark .glass-deep {
+    background:
+      linear-gradient(150deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 55%),
+      rgba(13, 10, 34, 0.94);
+  }
 }
 
 /* ---- Scroll reveal ---- */
