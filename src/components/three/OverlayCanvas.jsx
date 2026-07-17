@@ -9,7 +9,13 @@ export default function OverlayCanvas() {
     <Canvas
       dpr={Math.min(window.devicePixelRatio, 2)}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-      style={{ position: 'fixed', inset: 0, zIndex: 20, pointerEvents: 'none' }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 20,
+        pointerEvents: 'none',
+        transform: 'translateZ(0)',
+      }}
       aria-hidden="true"
     >
       <View.Port />
