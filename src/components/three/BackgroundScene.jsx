@@ -351,7 +351,11 @@ export default function BackgroundScene({ theme }) {
   ]
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
+    <div
+      className="pointer-events-none fixed inset-0 z-0"
+      style={{ transform: 'translateZ(0)' }}
+      aria-hidden="true"
+    >
       <Canvas
         camera={{ position: [0, 0, 12], fov: 55 }}
         dpr={Math.min(window.devicePixelRatio, 2)}

@@ -82,32 +82,33 @@ body {
 }
 
 /* Fallback for browsers/GPUs where backdrop-filter is unavailable or
-   blocklisted (older Firefox ESR, disabled hardware acceleration, some Linux
-   drivers): swap the see-through film for opaque tinted glass with a soft
-   sheen, so panels stay readable over the starfield. */
+   blocklisted (disabled hardware acceleration, some Linux drivers, older
+   Firefox ESR): the blur itself cannot exist there, so keep REAL transparency
+   — a translucent tint with a whisper of sheen — and let the starfield show
+   through crisply. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass {
     background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%),
-      rgba(244, 246, 255, 0.9);
+      linear-gradient(150deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 60%),
+      rgba(244, 246, 255, 0.62);
   }
 
   .dark .glass {
     background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 55%),
-      rgba(20, 15, 48, 0.92);
+      linear-gradient(150deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 60%),
+      rgba(22, 17, 52, 0.55);
   }
 
   .glass-deep {
     background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 55%),
-      rgba(247, 248, 255, 0.94);
+      linear-gradient(150deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 60%),
+      rgba(247, 248, 255, 0.72);
   }
 
   .dark .glass-deep {
     background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 55%),
-      rgba(13, 10, 34, 0.94);
+      linear-gradient(150deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 60%),
+      rgba(14, 10, 36, 0.68);
   }
 }
 

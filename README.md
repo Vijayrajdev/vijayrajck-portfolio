@@ -3,7 +3,7 @@
 Space-themed 3D portfolio for a Senior Data Engineer, built with React, Three.js
 (@react-three/fiber + drei), and Tailwind CSS v4. Installable as a PWA.
 
-**Live:** https://vijayraj.vercel.app
+**Live:** https://vijayrajck.vercel.app
 
 ## Highlights
 
