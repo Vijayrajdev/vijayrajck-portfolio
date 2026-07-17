@@ -118,6 +118,26 @@ body::before {
     0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
+/* Apple platforms (.glass-sheer): the original ultra-transparent glass —
+   live backdrop blur carries the whole effect there. */
+.glass-sheer .glass {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.glass-sheer.dark .glass,
+.glass-sheer .dark .glass {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.glass-sheer .glass-deep {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.glass-sheer.dark .glass-deep,
+.glass-sheer .dark .glass-deep {
+  background: rgba(10, 8, 30, 0.45);
+}
+
 /* ---- Frost-plate emulation, ONLY under .no-backdrop ----
    Each panel clips a viewport-anchored copy of the nebula background,
    blurred with plain filter: blur() (works even in software rendering).
