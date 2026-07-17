@@ -1,6 +1,7 @@
 import PipelineScene from './three/PipelineScene.jsx'
 import { PORTFOLIO_DATA } from '../data/portfolio.js'
 import { useTypewriter } from '../hooks/useTypewriter.js'
+import { WEBGL_AVAILABLE } from '../utils/capabilities.js'
 
 export default function Hero({ theme }) {
   const { profile } = PORTFOLIO_DATA
@@ -79,7 +80,7 @@ export default function Hero({ theme }) {
           </div>
           <div className="border-t border-white/20 px-5 py-2.5 dark:border-white/10">
             <p className="font-display text-[9px] tracking-[0.3em] text-slate-500 uppercase dark:text-slate-400">
-              // event-driven etl · drag to orbit
+              {WEBGL_AVAILABLE ? '// event-driven etl · drag to orbit' : '// event-driven etl'}
             </p>
           </div>
         </div>
