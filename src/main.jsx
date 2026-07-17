@@ -38,6 +38,13 @@ function backdropFilterUnavailable() {
 if (!WEBGL_AVAILABLE) document.documentElement.classList.add('no-webgl')
 if (backdropFilterUnavailable()) document.documentElement.classList.add('no-backdrop')
 
+// Apple platforms render backdrop blur reliably, so they get the original
+// sheer glass; other platforms keep the more substantial material that reads
+// as frosted even when the browser contributes no blur.
+if (/Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent)) {
+  document.documentElement.classList.add('glass-sheer')
+}
+
 // One-line diagnostic so remote debugging is possible: ask a visitor to open
 // the console and read this.
 console.info(
