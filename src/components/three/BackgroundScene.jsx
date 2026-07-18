@@ -392,11 +392,15 @@ function SceneLights({ dark }) {
   )
 }
 
+// Three of the six brand logos float per visit, drawn fresh on each page
+// load. Picked at module scope so theme toggles don't reshuffle mid-session.
+const SESSION_LOGOS = [...LOGOS_3D].sort(() => Math.random() - 0.5).slice(0, 3)
+
 export default function BackgroundScene({ theme }) {
   const dark = theme === 'dark'
-  const icons = LOGOS_3D
+  const icons = SESSION_LOGOS
   const iconPositions = [
-    [-9.4, -4.6, -1.5],
+    [-10.4, -5.4, -1.5],
     [8.6, -3.8, -1],
     [7.6, 4.3, -2],
   ]
