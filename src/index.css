@@ -119,23 +119,44 @@ body::before {
 }
 
 /* Apple platforms (.glass-sheer): the original ultra-transparent glass —
-   live backdrop blur carries the whole effect there. */
-.glass-sheer .glass {
+   live backdrop blur carries the whole effect there.
+   FrostGL platforms (.frost-gl): the same sheer glass, but the blur is
+   rendered inside the background canvas by FrostGL, so the browser's
+   backdrop-filter is turned off to avoid double effects. */
+.glass-sheer .glass,
+.frost-gl .glass {
   background: rgba(255, 255, 255, 0.45);
 }
 
 .glass-sheer.dark .glass,
-.glass-sheer .dark .glass {
+.glass-sheer .dark .glass,
+.frost-gl.dark .glass,
+.frost-gl .dark .glass {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.glass-sheer .glass-deep {
+.glass-sheer .glass-deep,
+.frost-gl .glass-deep {
   background: rgba(255, 255, 255, 0.55);
 }
 
 .glass-sheer.dark .glass-deep,
-.glass-sheer .dark .glass-deep {
+.glass-sheer .dark .glass-deep,
+.frost-gl.dark .glass-deep,
+.frost-gl .dark .glass-deep {
   background: rgba(10, 8, 30, 0.45);
+}
+
+.frost-gl .glass,
+.frost-gl .glass-deep {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* FrostGL supersedes the CSS frost plate if both modes ever coincide. */
+html.frost-gl .glass::before,
+html.frost-gl .glass-deep::before {
+  display: none;
 }
 
 /* ---- Frost-plate emulation, ONLY under .no-backdrop ----

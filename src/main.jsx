@@ -8,28 +8,17 @@ import '@fontsource/space-grotesk/500.css'
 import '@fontsource/space-grotesk/700.css'
 import './index.css'
 import App from './App.jsx'
-import { WEBGL_AVAILABLE } from './utils/capabilities.js'
+import { APPLE_PLATFORM, FROST_GL, SOFTWARE_GL, WEBGL_AVAILABLE } from './utils/capabilities.js'
 
 // backdrop-filter needs GPU compositing: browsers with software rendering
 // (blocklisted drivers, disabled hardware acceleration — common on Windows)
-// silently skip it even though CSS.supports() says yes. Detect that case via
-// the WebGL renderer string and switch the glass to its frost-plate emulation.
+// silently skip it even though CSS.supports() says yes.
 function backdropFilterUnavailable() {
   try {
     const supported =
       CSS.supports('backdrop-filter', 'blur(1px)') ||
       CSS.supports('-webkit-backdrop-filter', 'blur(1px)')
-    if (!supported) return true
-    if (!WEBGL_AVAILABLE) return false
-
-    const canvas = document.createElement('canvas')
-    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
-    if (!gl) return false
-    const info = gl.getExtension('WEBGL_debug_renderer_info')
-    const renderer = String(
-      info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
-    )
-    return /swiftshader|llvmpipe|softpipe|software|basic render driver/i.test(renderer)
+    return !supported || (WEBGL_AVAILABLE && SOFTWARE_GL)
   } catch {
     return false
   }
@@ -38,17 +27,14 @@ function backdropFilterUnavailable() {
 if (!WEBGL_AVAILABLE) document.documentElement.classList.add('no-webgl')
 if (backdropFilterUnavailable()) document.documentElement.classList.add('no-backdrop')
 
-// Apple platforms render backdrop blur reliably, so they get the original
-// sheer glass; other platforms keep the more substantial material that reads
-// as frosted even when the browser contributes no blur.
-if (/Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent)) {
-  document.documentElement.classList.add('glass-sheer')
-}
+// Apple platforms render CSS backdrop blur reliably → original sheer glass.
+// Other platforms with a real GPU → sheer glass too, with the blur rendered
+// by FrostGL inside the background canvas instead of by the browser.
+if (APPLE_PLATFORM) document.documentElement.classList.add('glass-sheer')
+if (FROST_GL) document.documentElement.classList.add('frost-gl')
 
-// One-line diagnostic so remote debugging is possible: ask a visitor to open
-// the console and read this.
 console.info(
-  `[vj-portfolio] webgl=${WEBGL_AVAILABLE} backdrop=${!document.documentElement.classList.contains('no-backdrop')}`,
+  `[vj-portfolio] webgl=${WEBGL_AVAILABLE} frostgl=${FROST_GL} backdrop=${!document.documentElement.classList.contains('no-backdrop')}`,
 )
 
 createRoot(document.getElementById('root')).render(
