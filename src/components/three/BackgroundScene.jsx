@@ -5,6 +5,8 @@ import * as THREE from 'three'
 import { LOGOS_3D } from '../../data/logos3d.js'
 import { useLogoGeometry } from './useLogoGeometry.js'
 import { playSparkle } from '../../utils/sparkle.js'
+import { FROST_GL } from '../../utils/capabilities.js'
+import FrostGL from './FrostGL.jsx'
 
 // DOM content sits above this canvas, so R3F's own event system never sees
 // the pointer. Track it at the window level in normalized device coords.
@@ -321,6 +323,55 @@ function TechIcon({ name, color, path, position, dark }) {
   )
 }
 
+// In FrostGL mode the canvas must be opaque (the frost blur can only sample
+// what the scene itself paints), so the CSS nebula is replicated here as a
+// far backdrop plane.
+function NebulaBackdrop({ dark }) {
+  const texture = useMemo(() => {
+    const w = 1024
+    const h = 512
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const g = canvas.getContext('2d')
+
+    const radial = (x, y, r, color) => {
+      const grad = g.createRadialGradient(x, y, 0, x, y, r)
+      grad.addColorStop(0, color)
+      grad.addColorStop(1, 'rgba(0,0,0,0)')
+      g.fillStyle = grad
+      g.fillRect(0, 0, w, h)
+    }
+
+    if (dark) {
+      g.fillStyle = '#05020f'
+      g.fillRect(0, 0, w, h)
+      radial(w * 0.8, -h * 0.1, w * 0.7, '#2a1458')
+      radial(-w * 0.1, h * 0.4, w * 0.55, '#0b1e4d')
+      radial(w * 0.6, h * 1.1, w * 0.5, '#3d0f3f')
+    } else {
+      const base = g.createLinearGradient(0, 0, w * 0.2, h)
+      base.addColorStop(0, '#eef2ff')
+      base.addColorStop(0.55, '#f0f9ff')
+      base.addColorStop(1, '#faf5ff')
+      g.fillStyle = base
+      g.fillRect(0, 0, w, h)
+      radial(w * 0.85, -h * 0.05, w * 0.5, '#e0e7ff')
+      radial(-w * 0.05, h * 0.3, w * 0.45, '#cffafe')
+    }
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.colorSpace = THREE.SRGBColorSpace
+    return tex
+  }, [dark])
+
+  return (
+    <mesh position={[0, 0, -9]} renderOrder={-10}>
+      <planeGeometry args={[64, 30]} />
+      <meshBasicMaterial map={texture} fog={false} depthWrite={false} />
+    </mesh>
+  )
+}
+
 function SceneLights({ dark }) {
   if (dark) {
     return (
@@ -361,6 +412,8 @@ export default function BackgroundScene({ theme }) {
         dpr={Math.min(window.devicePixelRatio, 2)}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       >
+        {FROST_GL && <NebulaBackdrop dark={dark} />}
+        {FROST_GL && <FrostGL />}
         <SceneLights dark={dark} />
         {dark && (
           <>
