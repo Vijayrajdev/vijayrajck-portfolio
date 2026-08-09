@@ -23,20 +23,23 @@ export default function Hero({ theme }) {
             className="h-20 w-20 rounded-3xl object-cover opacity-95 saturate-[0.9] ring-1 ring-white/40 dark:ring-white/20"
           />
           <div>
-            <p className="font-display text-sm font-bold tracking-[0.15em] uppercase">
+            {/* The name is the most important SEO signal on the page, so it
+                lives in the real <h1> — visually identical to before, just
+                semantically correct for search engines. */}
+            <h1 className="font-display text-sm font-bold tracking-[0.15em] uppercase">
               {profile.name}
-            </p>
+            </h1>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
               {profile.role} · {profile.certification}
             </p>
           </div>
         </div>
 
-        <h1 className="font-display glow-title text-3xl leading-snug font-black tracking-wider uppercase sm:text-4xl xl:text-[2.6rem]">
+        <h2 className="font-display glow-title text-3xl leading-snug font-black tracking-wider uppercase sm:text-4xl xl:text-[2.6rem]">
           <span className="text-aurora">Data platforms</span>
           <br />
           <span className="text-slate-800 dark:text-slate-100">that build themselves.</span>
-        </h1>
+        </h2>
 
         <p className="caret font-display mt-5 min-h-6 text-sm font-medium tracking-[0.2em] text-slate-600 uppercase dark:text-slate-300">
           {typed}
