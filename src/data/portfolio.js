@@ -114,6 +114,17 @@ export const PORTFOLIO_DATA = {
 
   projects: [
     {
+      id: "pipewright",
+      name: "Pipewright",
+      tagline: "Your Junior Data Engineer",
+      description:
+        "Drop in raw files and Pipewright infers the schema, keys and table relationships, then drafts the DDL, SQL, dbt tests, quality checks, docs and Airflow/Dagster pipelines that come next. Runs in the browser, streams multi-GB files, and works with your own AI key or none at all.",
+      tech: ["TypeScript", "Next.js", "BigQuery", "dbt", "Airflow", "Claude"],
+      accent: "#fb8c5a",
+      github: "https://github.com/Vijayrajdev/Pipewright",
+      live: "https://pipewright-beige.vercel.app",
+    },
+    {
       id: "sentinel-forge",
       name: "Sentinel-Forge",
       tagline: "Autonomous Agentic Data Engineering Platform",
@@ -142,16 +153,6 @@ export const PORTFOLIO_DATA = {
       tech: ["Python", "SQL", "React", "Cloud Architecture"],
       accent: "#f472b6",
       github: "https://github.com/Vijayrajdev/JobTrackr",
-    },
-    {
-      id: "next-mission",
-      name: "Next Mission",
-      tagline: "Slot Reserved — In Dev",
-      description:
-        "The next build is being charted on the launchpad. Telemetry incoming — check back soon for the reveal.",
-      tech: ["Classified"],
-      accent: "#22d3ee",
-      placeholder: true,
     },
   ],
 };
