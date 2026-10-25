@@ -40,18 +40,31 @@ export default function Projects({ theme }) {
                     Standby
                   </span>
                 ) : (
-                  project.github && (
-                    <a
-                      href={project.github}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`${project.name} on GitHub`}
-                      className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-700 uppercase transition hover:scale-105 dark:text-slate-200"
-                    >
-                      <BrandIcon icon={SOCIAL_ICONS.github} className="h-3.5 w-3.5" />
-                      Source
-                    </a>
-                  )
+                  <div className="flex items-center gap-2">
+                    {project.live && (
+                      <a
+                        href={project.live}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Open ${project.name} live`}
+                        className="glass flex items-center gap-1 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-700 uppercase transition hover:scale-105 dark:text-slate-200"
+                      >
+                        Live <span aria-hidden="true">↗</span>
+                      </a>
+                    )}
+                    {project.github && (
+                      <a
+                        href={project.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`${project.name} on GitHub`}
+                        className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-700 uppercase transition hover:scale-105 dark:text-slate-200"
+                      >
+                        <BrandIcon icon={SOCIAL_ICONS.github} className="h-3.5 w-3.5" />
+                        Source
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
               <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">

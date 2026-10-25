@@ -65,6 +65,30 @@ function ProjectSculpture({ id, accent, dark }) {
     )
   }
 
+  if (id === 'pipewright') {
+    // Data model: table blocks joined by a pipe — the inferred ER diagram.
+    const nodes = [
+      [-1.1, 0.45, 0],
+      [0, -0.4, 0.4],
+      [1.1, 0.45, -0.2],
+    ]
+    const pipe = new THREE.CatmullRomCurve3(nodes.map((p) => new THREE.Vector3(...p)))
+    return (
+      <group>
+        {nodes.map((p, i) => (
+          <mesh key={i} position={p}>
+            <boxGeometry args={[0.55, 0.42, 0.42]} />
+            {material}
+          </mesh>
+        ))}
+        <mesh>
+          <tubeGeometry args={[pipe, 48, 0.07, 12, false]} />
+          {material}
+        </mesh>
+      </group>
+    )
+  }
+
   if (id === 'next-mission') {
     // Placeholder slot: an uncharted wireframe world awaiting its mission.
     return (
