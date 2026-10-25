@@ -52,8 +52,6 @@ export default function ContributionMap() {
     if (scroller.current) scroller.current.scrollLeft = scroller.current.scrollWidth
   }, [weeks, view])
 
-  if (contributions.status === 'error') return null
-
   return (
     <div className="reveal glass-deep mt-8 overflow-hidden rounded-3xl">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/20 px-5 py-3 dark:border-white/10">
@@ -91,7 +89,20 @@ export default function ContributionMap() {
         )}
       </div>
 
-      {!data ? (
+      {contributions.status === 'error' ? (
+        <p className="px-5 py-8 font-mono text-xs text-slate-500 dark:text-slate-400">
+          ✕ Contribution feed offline right now. See the{' '}
+          <a
+            href={PORTFOLIO_DATA.profile.github}
+            target="_blank"
+            rel="noreferrer"
+            className="text-indigo-600 underline dark:text-cyan-300"
+          >
+            live GitHub profile
+          </a>{' '}
+          instead.
+        </p>
+      ) : !data ? (
         <p className="px-5 py-8 font-mono text-xs text-slate-500 dark:text-slate-400">
           ◌ rendering a year of commits…
         </p>

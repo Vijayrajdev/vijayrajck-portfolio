@@ -76,17 +76,22 @@ async function load() {
 
 let inflight = null
 
+// Shared fetch: the boot screen starts it, the panels reuse the same promise.
+export const loadGitHub = () => {
+  inflight ??= load().catch((err) => {
+    inflight = null
+    throw err
+  })
+  return inflight
+}
+
 export function useGitHub() {
   const [state, setState] = useState({ status: 'loading' })
   useEffect(() => {
     let alive = true
-    inflight ??= load()
-    inflight
+    loadGitHub()
       .then((data) => alive && setState({ status: 'ready', data }))
-      .catch((err) => {
-        inflight = null
-        if (alive) setState({ status: 'error', reason: err.message })
-      })
+      .catch((err) => alive && setState({ status: 'error', reason: err.message }))
     return () => {
       alive = false
     }
