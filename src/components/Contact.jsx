@@ -20,7 +20,7 @@ export default function Contact() {
   return (
     <section id="contact" className="relative mx-auto max-w-3xl scroll-mt-28 px-6 py-20">
       <div className="reveal mb-10 text-center">
-        <p className="chapter-label">// CHAPTER 06 — TRANSMISSION</p>
+        <p className="chapter-label">// CHAPTER 07 — TRANSMISSION</p>
         <h2 className="font-display glow-title mt-3 text-3xl font-bold tracking-wide uppercase sm:text-4xl">
           <span className="text-aurora">Open a Channel</span>
         </h2>

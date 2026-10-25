@@ -9,7 +9,7 @@ import * as THREE from 'three'
 // saturation lift CSS applies. Panel rectangles are read live from the DOM,
 // so scroll, reveals, and hover lifts all stay in sync.
 
-const MAX_PANELS = 24
+const MAX_PANELS = 48
 
 const blurVertex = /* glsl */ `
   varying vec2 vUv;
@@ -82,15 +82,18 @@ export default function FrostGL() {
   const { gl, scene, camera, size, viewport } = useThree()
   const panelsRef = useRef([])
 
-  // Track every glass element currently in the document.
+  // Track every glass element currently in the document. The fixed nav goes
+  // first so it never loses its frost to the panel cap.
   useEffect(() => {
     const collect = () => {
-      panelsRef.current = Array.from(document.querySelectorAll('.glass, .glass-deep')).map(
-        (el) => ({
+      panelsRef.current = Array.from(document.querySelectorAll('.glass, .glass-deep'))
+        .map((el) => ({
           el,
+          reveal: el.closest('.reveal'),
+          fixed: Boolean(el.closest('header')),
           radius: Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, 200),
-        }),
-      )
+        }))
+        .sort((a, b) => Number(b.fixed) - Number(a.fixed))
     }
     collect()
     const interval = setInterval(collect, 2000)
@@ -156,8 +159,10 @@ export default function FrostGL() {
     const rects = compositeMaterial.uniforms.uRects.value
     const radii = compositeMaterial.uniforms.uRadii.value
     let count = 0
-    for (const { el, radius } of panelsRef.current) {
+    for (const { el, reveal, radius } of panelsRef.current) {
       if (count >= MAX_PANELS) break
+      // Not yet scrolled into view: the panel is invisible, so is its frost.
+      if (reveal && !reveal.classList.contains('is-visible')) continue
       const r = el.getBoundingClientRect()
       if (r.width < 24 || r.height < 24) continue
       if (r.bottom < 0 || r.top > size.height || r.right < 0 || r.left > size.width) continue

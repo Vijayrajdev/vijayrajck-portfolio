@@ -5,7 +5,7 @@ export default function Experience() {
   return (
     <section id="flight-log" className="relative mx-auto max-w-4xl scroll-mt-28 px-6 py-20">
       <ChapterHeading
-        chapter="04"
+        chapter="05"
         label="Flight Log"
         title="Experience"
         subtitle="From full-stack origins to a Senior Data Engineer promotion — the mission record."
@@ -15,7 +15,7 @@ export default function Experience() {
         {PORTFOLIO_DATA.experience.map((job) => (
           <article key={job.period} className="reveal relative">
             <span className="absolute top-7 -left-10 h-4 w-4 rounded-full border-2 border-cyan-300 bg-indigo-500 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
-            <div className="glass-deep rounded-3xl p-7 card-lift">
+            <div className="glass-deep spotlight tilt rounded-3xl p-7 card-lift">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <h3 className="text-lg font-bold">{job.title}</h3>
                 {job.badge && (

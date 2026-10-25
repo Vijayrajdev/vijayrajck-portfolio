@@ -36,7 +36,7 @@ export default function Awards() {
   return (
     <section id="awards" className="relative mx-auto max-w-5xl scroll-mt-28 px-6 py-20">
       <ChapterHeading
-        chapter="05"
+        chapter="06"
         label="Commendations"
         title="Awards & Honors"
         subtitle="Medals collected along the flight path."
@@ -46,7 +46,7 @@ export default function Awards() {
         {PORTFOLIO_DATA.awards.map((award) => (
           <article
             key={award.name}
-            className="reveal glass-deep card-lift flex items-start gap-4 rounded-3xl p-5 sm:items-center sm:gap-5 sm:p-6"
+            className="reveal glass-deep spotlight tilt card-lift flex items-start gap-4 rounded-3xl p-5 sm:items-center sm:gap-5 sm:p-6"
           >
             <div
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/40 sm:h-14 sm:w-14 dark:border-white/10 dark:bg-white/5"

@@ -298,3 +298,365 @@ html.frost-gl .glass-deep::before {
 ::selection {
   background: rgba(168, 85, 247, 0.35);
 }
+
+/* ---- Pointer spotlight + 3D tilt (positions fed by usePointerGlow) ---- */
+.spotlight {
+  position: relative;
+}
+
+.spotlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(139, 92, 246, 0.14),
+    transparent 45%
+  );
+}
+
+.dark .spotlight::after {
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(34, 211, 238, 0.13),
+    rgba(168, 85, 247, 0.06) 30%,
+    transparent 55%
+  );
+}
+
+.spotlight:hover::after {
+  opacity: 1;
+}
+
+/* Tilt only for precise pointers that haven't asked for less motion. Kept off
+   project cards: their 3D stages are scissored to the card's box. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .tilt.card-lift:hover {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-6px);
+    transition:
+      transform 0.12s ease-out,
+      box-shadow 0.35s ease,
+      border-color 0.35s ease;
+  }
+}
+
+.no-backdrop .tilt.card-lift:hover {
+  transform: none;
+}
+
+/* Skills filter: matching tiles close ranks and pop back in. Only after the
+   visitor has filtered, so the first scroll-reveal isn't doubled up.
+   (display: none → flex restarts the animation on each re-shown tile.) */
+[data-filtered] .skill-tile.is-visible {
+  animation: tile-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+}
+
+.group:hover .skill-icon {
+  box-shadow: 0 0 24px var(--glow);
+}
+
+/* ---- Skill lineage graph ---- */
+.lineage-flow {
+  stroke-dasharray: 6 8;
+  animation: lineage-flow 0.9s linear infinite;
+}
+
+@keyframes lineage-flow {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+.lineage-node.is-lit {
+  border-color: var(--node-accent);
+  box-shadow:
+    0 0 0 1px var(--node-accent),
+    0 0 20px color-mix(in srgb, var(--node-accent) 45%, transparent);
+}
+
+/* Telemetry: each acked message slides in from the stream */
+.telemetry-msg {
+  animation: msg-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+/* Badge unlock toast */
+.badge-toast {
+  animation: toast-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+}
+
+/* ---- Schema Storm conveyor ----
+   Horizontal belt on wide screens, vertical on phones. --p (0→1) is each
+   card's progress toward the warehouse gate. */
+.belt {
+  --cw: 12rem;
+  --ch: 5.6rem;
+}
+
+.belt-card {
+  width: var(--cw);
+  top: 50%;
+  left: calc(var(--p) * (100% - var(--cw)));
+  transform: translateY(-50%);
+}
+
+.belt-card.is-front {
+  box-shadow:
+    0 0 0 1.5px #22d3ee,
+    0 0 26px rgba(34, 211, 238, 0.45);
+}
+
+.belt-card.is-loaded {
+  animation: to-warehouse 0.45s ease-in forwards;
+}
+
+.belt-card.is-quarantined {
+  animation: to-dlq 0.45s ease-in forwards;
+}
+
+.belt-card.is-missed {
+  animation: missed 0.45s ease-in forwards;
+}
+
+@keyframes to-warehouse {
+  to {
+    opacity: 0;
+    transform: translate(48px, -50%) scale(0.9);
+    box-shadow: 0 0 30px rgba(52, 211, 153, 0.9);
+  }
+}
+
+@keyframes to-dlq {
+  to {
+    opacity: 0;
+    transform: translate(0, -170%) scale(0.9);
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.9);
+  }
+}
+
+@keyframes missed {
+  to {
+    opacity: 0;
+    transform: translate(24px, -50%);
+    box-shadow: 0 0 30px rgba(244, 63, 94, 0.95);
+  }
+}
+
+.belt-track {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 38px,
+    rgba(148, 163, 184, 0.14) 38px 40px
+  );
+  animation: belt-x 0.9s linear infinite;
+}
+
+@keyframes belt-x {
+  to {
+    background-position: 40px 0;
+  }
+}
+
+.belt-gate {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, transparent, #34d399, transparent);
+  box-shadow: 0 0 18px #34d399;
+}
+
+@media (max-width: 639px) {
+  .belt-card {
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    top: calc(var(--p) * (100% - var(--ch)));
+    transform: none;
+  }
+
+  @keyframes to-warehouse {
+    to {
+      opacity: 0;
+      transform: translateY(40px) scale(0.92);
+      box-shadow: 0 0 30px rgba(52, 211, 153, 0.9);
+    }
+  }
+
+  @keyframes to-dlq {
+    to {
+      opacity: 0;
+      transform: translateX(-110%);
+      box-shadow: 0 0 30px rgba(251, 191, 36, 0.9);
+    }
+  }
+
+  @keyframes missed {
+    to {
+      opacity: 0;
+      transform: translateY(24px);
+      box-shadow: 0 0 30px rgba(244, 63, 94, 0.95);
+    }
+  }
+
+  .belt-track {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0 38px,
+      rgba(148, 163, 184, 0.14) 38px 40px
+    );
+    animation-name: belt-y;
+  }
+
+  @keyframes belt-y {
+    to {
+      background-position: 0 40px;
+    }
+  }
+
+  .belt-gate {
+    top: auto;
+    left: 0;
+    width: auto;
+    height: 3px;
+    background: linear-gradient(to right, transparent, #34d399, transparent);
+  }
+}
+
+.level-banner {
+  animation: banner 2.6s ease forwards;
+}
+
+@keyframes banner {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  12%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---- 2060 layer: boot, HUD, reticle, contribution cells ---- */
+.boot-scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(34, 211, 238, 0.05) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+.boot-scan::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.12), transparent);
+  animation: scan 1.2s linear infinite;
+}
+
+@keyframes scan {
+  from {
+    top: -120px;
+  }
+  to {
+    top: 100%;
+  }
+}
+
+.hud-bar {
+  display: inline-block;
+  width: 3px;
+  height: 60px;
+  margin-top: 4px;
+  vertical-align: middle;
+  background: linear-gradient(0deg, #22d3ee var(--w), rgba(148, 163, 184, 0.25) var(--w));
+}
+
+.reticle span {
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid rgba(124, 111, 240, 0.75);
+  border-radius: 50%;
+  transition:
+    transform 0.2s ease,
+    border-radius 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.dark .reticle span {
+  border-color: rgba(34, 211, 238, 0.75);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+}
+
+.reticle.is-locked span {
+  transform: scale(1.35) rotate(45deg);
+  border-radius: 6px;
+  border-color: #ec4899;
+  box-shadow: 0 0 16px rgba(236, 72, 153, 0.55);
+}
+
+.reveal:not(.is-visible) .heat-cell {
+  opacity: 0;
+}
+
+.is-visible .heat-cell {
+  animation: cell-in 0.4s var(--d) both;
+}
+
+@keyframes cell-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heat-cell,
+  .belt-track,
+  .level-banner,
+  .badge-toast,
+  .telemetry-msg,
+  .lineage-flow,
+  [data-filtered] .skill-tile.is-visible {
+    animation: none;
+  }
+}

@@ -1,7 +1,33 @@
 import PipelineScene from './three/PipelineScene.jsx'
 import { PORTFOLIO_DATA } from '../data/portfolio.js'
 import { useTypewriter } from '../hooks/useTypewriter.js'
+import { useCountUp } from '../hooks/useCountUp.js'
 import { WEBGL_AVAILABLE } from '../utils/capabilities.js'
+
+const STATS = [
+  ...PORTFOLIO_DATA.profile.stats,
+  {
+    value: PORTFOLIO_DATA.projects.filter((p) => !p.placeholder).length,
+    suffix: '',
+    label: 'Projects',
+  },
+  { value: PORTFOLIO_DATA.awards.length, suffix: '', label: 'Awards' },
+]
+
+function Stat({ value, suffix, label }) {
+  const [ref, current] = useCountUp(value)
+  return (
+    <div ref={ref} className="spotlight glass rounded-2xl px-4 py-3">
+      <p className="font-display text-aurora text-2xl font-black tabular-nums">
+        {current}
+        {suffix}
+      </p>
+      <p className="mt-0.5 text-[10px] leading-tight font-semibold tracking-[0.15em] text-slate-500 uppercase dark:text-slate-400">
+        {label}
+      </p>
+    </div>
+  )
+}
 
 export default function Hero({ theme }) {
   const { profile } = PORTFOLIO_DATA
@@ -64,6 +90,12 @@ export default function Hero({ theme }) {
           >
             Open Channel
           </a>
+        </div>
+
+        <div className="mt-8 grid max-w-md grid-cols-2 gap-3 sm:grid-cols-4">
+          {STATS.map((stat) => (
+            <Stat key={stat.label} {...stat} />
+          ))}
         </div>
       </div>
 

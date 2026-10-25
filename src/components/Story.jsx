@@ -17,7 +17,7 @@ export default function Story() {
         {PORTFOLIO_DATA.story.map((beat, i) => (
           <article
             key={beat.id}
-            className="reveal glass-deep relative overflow-hidden rounded-3xl p-7 card-lift"
+            className="reveal glass-deep spotlight tilt relative overflow-hidden rounded-3xl p-7 card-lift"
           >
             <span
               className="font-display absolute -top-3 -right-1 text-7xl font-black opacity-10"

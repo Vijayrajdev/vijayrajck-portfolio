@@ -4,8 +4,26 @@ import { PORTFOLIO_DATA } from '../data/portfolio.js'
 import { SOCIAL_ICONS } from '../data/socials.js'
 import ProjectStage from './three/ProjectStage.jsx'
 import { WEBGL_AVAILABLE } from '../utils/capabilities.js'
+import Telemetry from './Telemetry.jsx'
+import ContributionMap from './ContributionMap.jsx'
+import { repoFor, timeAgo, useGitHub } from '../hooks/useGitHub.js'
+
+// Live repo stats under a project's tagline, once GitHub data arrives.
+function RepoBadge({ project, data }) {
+  const repo = repoFor(data, project)
+  if (!repo) return null
+  return (
+    <p className="mt-1.5 flex items-center gap-2 font-mono text-[10px] text-slate-400 dark:text-slate-500">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
+      {repo.language ?? 'repo'} · ★ {repo.stars} · pushed {timeAgo(repo.pushedAt)}
+    </p>
+  )
+}
 
 export default function Projects({ theme }) {
+  const github = useGitHub()
+  const data = github.status === 'ready' ? github.data : null
+
   return (
     <section id="missions" className="relative mx-auto max-w-6xl scroll-mt-28 px-6 py-20">
       <ChapterHeading
@@ -23,7 +41,7 @@ export default function Projects({ theme }) {
         {PORTFOLIO_DATA.projects.map((project) => (
           <article
             key={project.id}
-            className={`reveal glass-deep flex flex-col overflow-hidden rounded-3xl card-lift ${
+            className={`reveal glass-deep spotlight flex flex-col overflow-hidden rounded-3xl card-lift ${
               project.placeholder ? 'border-dashed opacity-90' : ''
             }`}
           >
@@ -70,6 +88,7 @@ export default function Projects({ theme }) {
               <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
                 {project.tagline}
               </p>
+              <RepoBadge project={project} data={data} />
               <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                 {project.description}
               </p>
@@ -87,6 +106,9 @@ export default function Projects({ theme }) {
           </article>
         ))}
       </div>
+
+      <Telemetry />
+      <ContributionMap />
     </section>
   )
 }
