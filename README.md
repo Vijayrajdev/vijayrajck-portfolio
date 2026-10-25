@@ -86,8 +86,13 @@ or switch to **Ask in English** and type *"Which projects use Terraform?"*.
 `⌘K` / `Ctrl K` / <code>`</code> opens **VJ-OS**: `help`, `whoami`, `projects`,
 `open <name>`, `goto <section>`, `sql <query>`, `ask <question>`, `resume`,
 `theme`, `play` — with tab completion, history, tap-to-run chips on phones, and a
-few easter eggs. In Chrome, Edge and Safari the **🎙 mic** takes spoken commands
-(*"go to projects"*, *"which projects use dbt"*) via the Web Speech API.
+few easter eggs.
+
+**Voice mode** (Chrome, Edge, Safari — Web Speech API): tap 🎙 and just talk.
+A **live transcript** streams in as you speak, the command runs, the terminal
+**answers out loud** (*"Found 3: Pipewright, Sentinel-Forge and Nexus."*), then
+listens for the next one — hands-free until you tap 🎙 again. The mic pauses while
+it speaks, so it never transcribes itself.
 
 ### ◉ Live telemetry & contribution map
 
@@ -95,10 +100,10 @@ few easter eggs. In Chrome, Edge and Safari the **🎙 mic** takes spoken comman
 
 Public GitHub activity replayed as a **Pub/Sub-style message stream** — each event
 "acked" as it arrives — with repo, star and language stats, and live
-`language · ★ stars · pushed 5d ago` badges on every project card. Below it, the
-**contribution map**: a year of commits as a heatmap (coloured by quartile, like
-GitHub's own), with streak stats — or as a rotating **3D skyline**, one instanced
-tower per day.
+`language · ★ stars · pushed 5d ago` badges on the project cards whose repos are
+public. Below it, the **contribution map**: a year of commits as a heatmap
+(coloured by quartile of active days, similar to GitHub's), with streak stats — or
+as a rotating **3D skyline**, one instanced tower per day.
 
 <img src="docs/skyline.png" alt="Contribution map as a 3D skyline" width="100%" />
 
@@ -106,18 +111,32 @@ tower per day.
 
 <img src="docs/game.png" alt="Schema Storm — rows on a conveyor, active contracts, dedupe ledger" width="100%" />
 
-Rows stream down a conveyor toward the warehouse. **Load** the clean ones,
-**quarantine** the rest to the dead-letter queue — before they hit the gate. Every
-level adds a data contract, and sometimes a column (schema drift): `id IS NOT
-NULL`, `email LIKE '%@%'`, `amount >= 0`, `country IN (…)`, duplicate ids against
-a dedupe ledger, and late events past a watermark. Streaks multiply the score;
-three mistakes halt the pipeline. Keyboard (← / →, A / D), touch buttons, and a
-vertical belt on phones.
+Rows ride a conveyor toward the warehouse — left to right on desktop, top to
+bottom on phones. **Load** the clean ones, **quarantine** the rest to the
+dead-letter queue — before they hit the gate. Every level adds a data contract,
+and sometimes a column (schema drift): `id IS NOT NULL`, `email LIKE '%@%'`,
+`amount >= 0`, `country IN (…)`, duplicate ids against a dedupe ledger, and late
+events past a watermark. Three mistakes halt the pipeline.
+
+What makes it a game, not a quiz:
+
+- **Sound** — a synthesised score (Web Audio, zero files): chimes for loads,
+  thunks for quarantines, a buzz for mistakes, level-up arpeggios and a bass pulse
+  that speeds up every level. `M` or 🔊 mutes.
+- **3 · 2 · 1 · GO** countdown, **score pop-ups** and particle bursts where each
+  row was, **screen shake** and a red flash on mistakes (plus a vibration on Android).
+- **Streak multiplier** up to ×5 (🔥 from ×4), **VIP ×3** rows in gold, a
+  **perfect-level bonus** for clearing a level with no mistakes.
+- **❄ Backfill freeze** — every 10-streak earns a charge (hold up to 2); `F` / `Space` slows the
+  belt to 35% for 5 seconds.
+- **Leaderboard** — your top 5 runs on this device.
+
+Controls: ← / → or A / D, touch buttons on phones, `P` to pause.
 
 The rules live in a React-free module ([`schemaStorm.js`](src/game/schemaStorm.js))
 and are property-tested: across 21,000 generated rows, every broken row fails
-exactly the one contract it was built to break, and a bot reading only what's on
-screen plays it at 100% — so every call is fair.
+exactly the one contract it was built to break. A bot reading only what's on
+screen played through level 6 without a mistake — so every call is fair.
 
 ### 🏆 Mission badges & the 2060 layer
 
@@ -125,11 +144,15 @@ screen plays it at 100% — so every call is fair.
   English, trace lineage, catch the telemetry, use your voice, visit every
   chapter, find the secret command, score 500+ in Schema Storm… with unlock toasts
   and a progress panel in the nav.
-- **Boot sequence** on first visit (skippable, once per session, never for
-  reduced-motion users), a **HUD** running up the left edge (fps, Chennai time,
-  uplink, scroll depth), a **targeting reticle** that locks onto controls, a
-  **scroll-progress bar** and active-section nav, pointer-tracked **spotlight and
-  3D tilt** on cards, and count-up hero stats.
+- A **5-second loading screen** on every page load — and it's never idle: while
+  it runs it fetches the GitHub telemetry and contribution data, and the boot log
+  reports what actually came back. Any key or tap skips it.
+- A **HUD** running up the left edge (fps, Chennai time, uplink, scroll depth), a
+  **targeting reticle** that locks onto controls, a **scroll-progress bar** and
+  active-section nav, pointer-tracked **spotlight and 3D tilt** on cards, and
+  count-up hero stats.
+
+<img src="docs/boot.png" alt="The loading screen — boot log with live GitHub results" width="100%" />
 
 <div align="center">
 <img src="docs/projects.png" alt="Missions — draggable 3D project artifacts with live repo badges" width="100%" />
@@ -142,8 +165,9 @@ screen plays it at 100% — so every call is fair.
 | **Two WebGL contexts, total** | One background canvas + one shared overlay canvas rendering the pipeline, every project stage and the contribution skyline as scissored drei `<View>`s — immune to browser context-loss |
 | **FrostGL** | macOS-grade glassmorphism on every OS: where `backdrop-filter` can't be trusted (most Windows/Linux GPU configs), the background scene is gaussian-blurred in WebGL and composited back under each glass panel's rounded rect, tracked live from the DOM (fixed nav first, unrevealed panels skipped) |
 | **Capability ladder** | Real GPU → native blur or FrostGL · software GPU → CSS frost plate · no WebGL at all → CSS starfield + designed DOM fallbacks. Nobody sees an empty box |
-| **Live data, politely** | GitHub REST + a public contributions API, one request each per session (cached in `sessionStorage`), with offline/rate-limit states instead of blank panels |
-| **Motion with manners** | Every animation — boot, reticle, tilt, flowing edges, belts, toasts — respects `prefers-reduced-motion`; tilt and reticle only on precise pointers |
+| **Live data, politely** | GitHub REST (cached 10 minutes) and a public contributions API (cached for the session) in `sessionStorage`, prefetched during the loading screen, with offline/rate-limit messages instead of blank panels |
+| **Motion with manners** | Interface animations — boot, reticle, tilt, flowing edges, belts, pop-ups, toasts — respect `prefers-reduced-motion`, and tilt and reticle only run on precise pointers. The 3D scenes (background, pipeline, project models, skyline) keep moving |
+| **Frost-plate safe** | On machines without GPU blur, the frost fallback keeps absolutely/fixed-positioned glass (game cards, badge panel) where it belongs |
 | **Route-split** | `/play` is lazy-loaded, so the game costs the portfolio nothing until someone opens it |
 | **PWA** | Installable, offline-capable, custom VJ monogram as app icon, self-hosted fonts |
 
@@ -158,7 +182,8 @@ npm run preview  # test the production build locally
 ```
 
 **Debug switches:** `?frostgl=1` / `?frostgl=0` force the WebGL frost on/off ·
-`?boot` replays the boot sequence. The console prints
+`?boot=0` skips the loading screen (its length is `BOOT_MS` in
+[`Future.jsx`](src/components/Future.jsx)). The console prints
 `[vj-portfolio] webgl=… frostgl=… backdrop=…` on every load.
 
 ## `// CHAPTER 05 — MISSION CONTROL`
@@ -171,7 +196,8 @@ All content is data, not markup. Edit these and the site rebuilds itself:
 | [`src/data/skills.js`](src/data/skills.js) | Skill tiles, brand logos, and the aliases that drive lineage |
 | [`src/data/lineage.js`](src/data/lineage.js) | Skill → project/role edges (derived — no hand edits) |
 | [`src/data/tables.js`](src/data/tables.js) | Query Console tables (derived) + preset queries |
-| [`src/game/schemaStorm.js`](src/game/schemaStorm.js) | Schema Storm contracts, levels and pacing |
+| [`src/game/schemaStorm.js`](src/game/schemaStorm.js) | Schema Storm contracts, levels, pacing and leaderboard |
+| [`src/game/sfx.js`](src/game/sfx.js) | Schema Storm sound effects and bass pulse |
 | [`src/utils/achievements.js`](src/utils/achievements.js) | Mission badges |
 | [`src/data/logos3d.js`](src/data/logos3d.js) | The floating 3D logo pool |
 | [`src/data/socials.js`](src/data/socials.js) | Contact / social marks |
