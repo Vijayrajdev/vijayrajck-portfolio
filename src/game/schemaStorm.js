@@ -144,20 +144,30 @@ export function violations(item, ctx) {
   return rulesFor(item.level).filter((r) => !r.check(item.row, ctx))
 }
 
-const SCORE_KEY = 'vj-schema-storm-best'
+// Local leaderboard: the top 5 runs on this device.
+const BOARD_KEY = 'vj-schema-storm-board'
+const BOARD_SIZE = 5
 
-export function readBest() {
+export function readBoard() {
   try {
-    return Number(localStorage.getItem(SCORE_KEY)) || 0
+    const board = JSON.parse(localStorage.getItem(BOARD_KEY))
+    if (Array.isArray(board)) return board
+    // Carry over a best score saved before the leaderboard existed.
+    const legacy = Number(localStorage.getItem('vj-schema-storm-best'))
+    return legacy ? [{ score: legacy, level: null, date: null }] : []
   } catch {
-    return 0
+    return []
   }
 }
 
-export function saveBest(score) {
+// Records a run; returns its rank (0-based) if it made the board, else -1.
+export function saveRun(run) {
+  if (!run.score) return -1
+  const board = [...readBoard(), run].sort((a, b) => b.score - a.score).slice(0, BOARD_SIZE)
   try {
-    if (score > readBest()) localStorage.setItem(SCORE_KEY, String(score))
+    localStorage.setItem(BOARD_KEY, JSON.stringify(board))
   } catch {
-    /* best score lives for this visit only */
+    /* board lasts this visit only */
   }
+  return board.indexOf(run)
 }

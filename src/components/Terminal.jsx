@@ -56,7 +56,9 @@ const HELP = [
   ['contact', 'ways to reach me'],
   ['theme', 'toggle light / dark'],
   ['play', 'launch Schema Storm, the data game'],
-  ...(SpeechRecognition ? [['🎙 mic button', 'say “go to projects” or ask a question']] : []),
+  ...(SpeechRecognition
+    ? [['🎙 voice mode', 'talk to it — it answers out loud and keeps listening']]
+    : []),
   ['clear · history · exit', ''],
 ]
 
@@ -94,6 +96,55 @@ const TONES = {
 }
 
 const line = (text, tone = 'out') => ({ text, tone })
+
+// ---- Voice out: what the terminal says back ----
+const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
+
+function pickVoice() {
+  const voices = synth?.getVoices() ?? []
+  const english = voices.filter((v) => v.lang?.startsWith('en'))
+  return (
+    english.find((v) => v.lang === 'en-IN') ??
+    english.find((v) => /google|samantha|natural/i.test(v.name)) ??
+    english[0] ??
+    null
+  )
+}
+
+function speak(text, onDone) {
+  if (!synth || !text) {
+    onDone?.()
+    return
+  }
+  synth.cancel()
+  const u = new SpeechSynthesisUtterance(text)
+  const voice = pickVoice()
+  if (voice) u.voice = voice
+  u.rate = 1.05
+  u.onend = () => onDone?.()
+  u.onerror = () => onDone?.()
+  synth.speak(u)
+}
+
+const cleanForSpeech = (t) =>
+  t
+    .replace(/https?:\/\/\S+/g, 'a link')
+    .replace(/[❯✓✕📍🏅✨🎙`·→←⇢—|]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+// A short spoken version of a command's output.
+function spokenSummary(output) {
+  if (output.speech) return output.speech
+  // Muted lines are metadata (timings, hints) — read only the substance.
+  const parts = output
+    .map((l) => l.speech ?? (l.text && l.tone !== 'muted' ? cleanForSpeech(l.text) : ''))
+    .filter(Boolean)
+  const text = parts.slice(0, 4).join('. ') + (parts.length > 4 ? '. More is on screen.' : '')
+  return text.slice(0, 320)
+}
+
+const withSpeech = (output, speech) => Object.assign(output, { speech })
 
 const BANNER = [
   line('VJ-OS 3.0 · data-shell', 'accent'),
@@ -160,8 +211,19 @@ export default function Terminal({ open, setOpen, theme, toggleTheme }) {
   const runSql = (query) => {
     try {
       const result = runQuery(query, CAREER_TABLES)
+      const n = result.rows.length
+      const firsts = result.rows.slice(0, 5).map((r) => r[0])
       return [
-        { node: <ResultTable result={result} compact /> },
+        {
+          node: <ResultTable result={result} compact />,
+          speech: n
+            ? `Found ${n}: ${
+                firsts.length > 1
+                  ? `${firsts.slice(0, -1).join(', ')} and ${firsts.at(-1)}`
+                  : firsts[0]
+              }${n > 5 ? ', and more on screen' : ''}.`
+            : 'Nothing matched that.',
+        },
         line(
           `${result.rows.length} row${result.rows.length === 1 ? '' : 's'} in ${result.ms.toFixed(2)} ms`,
           'muted',
@@ -184,13 +246,19 @@ export default function Terminal({ open, setOpen, theme, toggleTheme }) {
       case '':
         return []
       case 'help':
-        return HELP.map(([c, d]) => line(`  ${c.padEnd(24)}${d}`))
+        return withSpeech(
+          HELP.map(([c, d]) => line(`  ${c.padEnd(24)}${d}`)),
+          "I can tell you about Vijay's projects, skills, experience and awards, run SQL, answer questions in plain English, jump to any section, or start the data game. Try: which projects use dbt.",
+        )
       case 'whoami':
-        return [
-          line(profile.name, 'accent'),
-          line(`${profile.role} · ${profile.certification}`),
-          line(`📍 ${profile.location}`, 'muted'),
-        ]
+        return withSpeech(
+          [
+            line(profile.name, 'accent'),
+            line(`${profile.role} · ${profile.certification}`),
+            line(`📍 ${profile.location}`, 'muted'),
+          ],
+          `${profile.name} is a ${profile.role} and ${profile.certification}, based in ${profile.location}.`,
+        )
       case 'about':
         return [line(profile.summary)]
       case 'ls':
@@ -243,7 +311,12 @@ export default function Terminal({ open, setOpen, theme, toggleTheme }) {
         try {
           const sql = textToSql(arg)
           unlock('ask')
-          return [line(sql.replace(/\n\s*/g, ' '), 'accent'), ...runSql(sql)]
+          // Speak the answer, not the SQL.
+          const result = runSql(sql)
+          return withSpeech(
+            [line(sql.replace(/\n\s*/g, ' '), 'accent'), ...result],
+            spokenSummary(result),
+          )
         } catch (err) {
           return [line(err.message, 'err')]
         }
@@ -312,41 +385,97 @@ export default function Terminal({ open, setOpen, theme, toggleTheme }) {
     }
   }
 
-  const [listening, setListening] = useState(false)
+  // ---- Voice mode: listen → run → speak the reply → listen again ----
+  // 'off' | 'listening' | 'speaking'. Recognition is stopped while the reply
+  // plays so the terminal never transcribes its own voice.
+  const [voice, setVoice] = useState('off')
+  const [transcript, setTranscript] = useState('')
+  const voiceOn = useRef(false)
   const recognizer = useRef(null)
+  const silentRounds = useRef(0)
 
-  const listen = () => {
-    if (listening) {
-      recognizer.current?.stop()
-      return
-    }
+  const stopVoice = (message) => {
+    voiceOn.current = false
+    recognizer.current?.abort()
+    recognizer.current = null
+    setTranscript('')
+    setVoice('off')
+    if (message) setLines((prev) => [...prev, line(message, 'muted')])
+  }
+
+  const listenOnce = () => {
+    if (!voiceOn.current) return
     const rec = new SpeechRecognition()
     rec.lang = 'en-US'
-    rec.interimResults = false
+    rec.interimResults = true
     rec.maxAlternatives = 1
+    let finalText = ''
     rec.onresult = (e) => {
-      const said = e.results[0][0].transcript
-      unlock('voice')
-      setLines((prev) => [...prev, line(`🎙 heard: “${said}”`, 'muted')])
-      run(voiceToCommand(said))
+      let interim = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i]
+        if (r.isFinal) finalText += r[0].transcript
+        else interim += r[0].transcript
+      }
+      setTranscript(`${finalText}${interim}`)
     }
     rec.onerror = (e) => {
+      if (e.error === 'no-speech' || e.error === 'aborted') return
       const reason = e.error === 'not-allowed' ? 'microphone permission was denied' : e.error
-      setLines((prev) => [...prev, line(`voice: ${reason}`, 'err')])
+      stopVoice(`voice: ${reason}`)
     }
-    rec.onend = () => setListening(false)
+    rec.onend = () => {
+      recognizer.current = null
+      if (!voiceOn.current) return
+      const said = finalText.trim()
+      if (!said) {
+        // Keep listening through short silences; give up after a while.
+        silentRounds.current += 1
+        if (silentRounds.current >= 3) stopVoice('voice paused — tap 🎙 to resume')
+        else listenOnce()
+        return
+      }
+      silentRounds.current = 0
+      setTranscript('')
+      unlock('voice')
+      setLines((prev) => [...prev, line(`🎙 heard: “${said}”`, 'muted')])
+      const output = run(voiceToCommand(said))
+      setVoice('speaking')
+      speak(output ? spokenSummary(output) : 'Done.', () => {
+        if (!voiceOn.current) return
+        setVoice('listening')
+        listenOnce()
+      })
+    }
     recognizer.current = rec
     rec.start()
-    setListening(true)
+    setVoice('listening')
   }
+
+  const toggleVoice = () => {
+    if (voiceOn.current) {
+      synth?.cancel()
+      stopVoice()
+      return
+    }
+    voiceOn.current = true
+    silentRounds.current = 0
+    listenOnce()
+  }
+
+  // Closing the terminal ends voice mode (a reply already playing finishes).
+  useEffect(() => {
+    if (!open && voiceOn.current) stopVoice()
+  }, [open])
 
   const run = (raw) => {
     if (raw.trim()) history.current.push(raw.trim())
     historyIndex.current = -1
     setInput('')
     const output = execute(raw)
-    if (output === null) return
+    if (output === null) return null
     setLines((prev) => [...prev, { prompt: raw }, ...output])
+    return output
   }
 
   const submit = (e) => {
@@ -468,6 +597,27 @@ export default function Terminal({ open, setOpen, theme, toggleTheme }) {
           ))}
         </div>
 
+        {voice !== 'off' && (
+          <div
+            className="flex items-center gap-3 border-t border-white/20 bg-rose-500/5 px-4 py-2 dark:border-white/10"
+            aria-live="polite"
+          >
+            <span className="voice-bars flex h-4 items-end gap-0.5" aria-hidden="true">
+              {[0, 1, 2, 3].map((i) => (
+                <i key={i} className={voice === 'speaking' ? 'is-speaking' : ''} />
+              ))}
+            </span>
+            <span className="font-display shrink-0 text-[9px] font-bold tracking-[0.25em] text-rose-500 uppercase">
+              {voice === 'speaking' ? 'Speaking' : 'Live'}
+            </span>
+            <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-slate-700 dark:text-slate-200">
+              {voice === 'speaking'
+                ? 'replying… then listening again'
+                : transcript || 'listening — try “go to projects” or “which projects use dbt”'}
+            </span>
+          </div>
+        )}
+
         <form
           onSubmit={submit}
           className="flex items-center gap-2 border-t border-white/20 px-4 py-3 dark:border-white/10"
@@ -482,18 +632,20 @@ export default function Terminal({ open, setOpen, theme, toggleTheme }) {
             autoCapitalize="off"
             autoComplete="off"
             aria-label="Terminal input"
-            placeholder={listening ? 'listening…' : 'type help'}
+            placeholder={voice === 'off' ? 'type help' : 'voice mode on — or type'}
             className="min-w-0 flex-1 bg-transparent font-mono text-[13px] text-slate-800 placeholder-slate-400 outline-none dark:text-slate-100 dark:placeholder-slate-500"
           />
           {SpeechRecognition && (
             <button
               type="button"
-              onClick={listen}
-              aria-pressed={listening}
-              aria-label={listening ? 'Stop listening' : 'Speak a command'}
-              title="Voice command"
+              onClick={toggleVoice}
+              aria-pressed={voice !== 'off'}
+              aria-label={voice !== 'off' ? 'Turn voice mode off' : 'Talk to the terminal'}
+              title="Voice mode — talk, and it talks back"
               className={`shrink-0 rounded-full px-2.5 py-1 text-sm transition ${
-                listening ? 'animate-pulse bg-rose-500/20 text-rose-500' : 'glass hover:scale-105'
+                voice !== 'off'
+                  ? 'animate-pulse bg-rose-500/20 text-rose-500'
+                  : 'glass hover:scale-105'
               }`}
             >
               🎙

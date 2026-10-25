@@ -68,17 +68,22 @@ async function load() {
 
 let inflight = null
 
+// Shared fetch: the boot screen starts it, the map reuses the same promise.
+export const loadContributions = () => {
+  inflight ??= load().catch((err) => {
+    inflight = null
+    throw err
+  })
+  return inflight
+}
+
 export function useContributions() {
   const [state, setState] = useState({ status: 'loading' })
   useEffect(() => {
     let alive = true
-    inflight ??= load()
-    inflight
+    loadContributions()
       .then((data) => alive && setState({ status: 'ready', data }))
-      .catch(() => {
-        inflight = null
-        if (alive) setState({ status: 'error' })
-      })
+      .catch(() => alive && setState({ status: 'error' }))
     return () => {
       alive = false
     }

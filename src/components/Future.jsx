@@ -1,87 +1,158 @@
 import { useEffect, useRef, useState } from 'react'
+import LogoVJ from './LogoVJ.jsx'
 import { CAREER_TABLES } from '../data/tables.js'
 import { EDGES } from '../data/lineage.js'
+import { loadGitHub } from '../hooks/useGitHub.js'
+import { loadContributions } from '../hooks/useContributions.js'
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const finePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches
 
-const BOOT_LINES = [
-  'VJ-OS 2060.4 · cold boot',
-  `[ ok ] mounting /career — ${Object.keys(CAREER_TABLES).length} tables`,
-  `[ ok ] linking skill lineage — ${EDGES.length} edges`,
-  '[ ok ] subscribing github.events',
-  '[ ok ] calibrating holo-glass',
-  '> welcome, operator',
+// The loading screen runs for BOOT_MS on every full page load. It is never
+// idle: GitHub telemetry and the contribution map are fetched while it plays
+// and the log reports what actually came back. Any key or tap skips it;
+// ?boot=0 turns it off (handy for screenshots and tests).
+export const BOOT_MS = 5000
+
+const BOOT_STEPS = [
+  { at: 0, text: 'VJ-OS 2060.4 · cold boot', kind: 'title' },
+  { at: 450, text: '[ ok ] holo-glass compositor online' },
+  { at: 950, text: `[ ok ] mounting /career — ${Object.keys(CAREER_TABLES).length} tables` },
+  { at: 1500, text: `[ ok ] linking skill lineage — ${EDGES.length} edges` },
+  { at: 2100, key: 'github', text: '[ .. ] subscribing github.events…' },
+  { at: 2800, key: 'contrib', text: '[ .. ] indexing a year of contributions…' },
+  { at: 3500, text: '[ ok ] voice link · sound · reticle calibrated' },
+  { at: 4300, text: '> welcome, operator', kind: 'welcome' },
 ]
 
-// A one-second boot sequence, once per browser session. Click or any key
-// skips it; reduced-motion visitors never see it. The page renders
-// underneath the whole time, so nothing waits on it.
+const TIPS = [
+  'press ⌘K / Ctrl K for the terminal — it talks back',
+  'ask the Query Console a question in plain English',
+  '▶ /play hosts Schema Storm, a data-quality game',
+  'collect all 11 mission badges 🏆',
+]
+
+const bootEnabled = () => {
+  try {
+    return new URLSearchParams(window.location.search).get('boot') !== '0'
+  } catch {
+    return true
+  }
+}
+
 export function BootSequence() {
-  const [shown, setShown] = useState(() => {
-    try {
-      if (new URLSearchParams(window.location.search).has('boot')) return true
-      return !reducedMotion() && !sessionStorage.getItem('vj-booted')
-    } catch {
-      return false
-    }
-  })
-  const [lines, setLines] = useState(0)
+  const [shown, setShown] = useState(bootEnabled)
+  const [elapsed, setElapsed] = useState(0)
   const [leaving, setLeaving] = useState(false)
+  const [results, setResults] = useState({})
+
+  // Real work during the boot: warm the shared data caches.
+  useEffect(() => {
+    if (!shown) return
+    loadGitHub()
+      .then((d) =>
+        setResults((r) => ({
+          ...r,
+          github: `[ ok ] github.events — ${d.events.length} events · ${d.repos.filter((x) => !x.fork).length} repos`,
+        })),
+      )
+      .catch(() =>
+        setResults((r) => ({ ...r, github: '[ -- ] github.events offline — continuing' })),
+      )
+    loadContributions()
+      .then((d) =>
+        setResults((r) => ({
+          ...r,
+          contrib: `[ ok ] contributions — ${d.stats.total.toLocaleString()} in 12 months`,
+        })),
+      )
+      .catch(() =>
+        setResults((r) => ({ ...r, contrib: '[ -- ] contributions offline — continuing' })),
+      )
+  }, [shown])
 
   useEffect(() => {
     if (!shown) return
-    try {
-      sessionStorage.setItem('vj-booted', '1')
-    } catch {
-      /* boots again next visit — harmless */
+    const root = document.documentElement
+    const previousOverflow = root.style.overflow
+    root.style.overflow = 'hidden'
+    const start = performance.now()
+    let raf
+    const tick = (now) => {
+      const t = now - start
+      setElapsed(Math.min(t, BOOT_MS))
+      if (t < BOOT_MS) raf = requestAnimationFrame(tick)
+      else setLeaving(true)
     }
-    const timers = BOOT_LINES.map((_, i) => setTimeout(() => setLines(i + 1), 120 + i * 140))
-    const leave = setTimeout(() => setLeaving(true), 120 + BOOT_LINES.length * 140 + 250)
-    const done = setTimeout(() => setShown(false), 120 + BOOT_LINES.length * 140 + 700)
-    const skip = () => {
-      setLeaving(true)
-      setTimeout(() => setShown(false), 350)
-    }
+    raf = requestAnimationFrame(tick)
+    const skip = () => setLeaving(true)
     window.addEventListener('keydown', skip, { once: true })
     window.addEventListener('pointerdown', skip, { once: true })
     return () => {
-      ;[...timers, leave, done].forEach(clearTimeout)
+      cancelAnimationFrame(raf)
+      root.style.overflow = previousOverflow
       window.removeEventListener('keydown', skip)
       window.removeEventListener('pointerdown', skip)
     }
   }, [shown])
 
+  useEffect(() => {
+    if (!leaving) return
+    const t = setTimeout(() => setShown(false), 450)
+    return () => clearTimeout(t)
+  }, [leaving])
+
   if (!shown) return null
+  const pct = Math.round((elapsed / BOOT_MS) * 100)
+  const tip = TIPS[Math.min(TIPS.length - 1, Math.floor((elapsed / BOOT_MS) * TIPS.length))]
+
   return (
     <div
-      aria-hidden="true"
-      className={`boot fixed inset-0 z-[100] flex items-center justify-center bg-[#05020f] transition-opacity duration-400 ${
+      role="status"
+      aria-label={`Loading, ${pct}%`}
+      className={`boot fixed inset-0 z-[100] flex items-center justify-center bg-[#05020f] transition-opacity duration-450 ${
         leaving ? 'opacity-0' : 'opacity-100'
       }`}
     >
       <div className="boot-scan" />
-      <div className="w-[min(30rem,calc(100vw-3rem))] font-mono text-xs leading-6 text-cyan-300">
-        {BOOT_LINES.slice(0, lines).map((l, i) => (
-          <p
-            key={l}
-            className={
-              i === 0
-                ? 'font-display tracking-[0.3em] text-white'
-                : l.startsWith('>')
-                  ? 'text-pink-400'
-                  : ''
-            }
-          >
-            {l}
-          </p>
-        ))}
-        <div className="mt-4 h-0.5 overflow-hidden rounded-full bg-white/10">
+      <div className="relative flex w-[min(32rem,calc(100vw-3rem))] flex-col items-center">
+        <div className="boot-core relative mb-8 flex h-28 w-28 items-center justify-center">
+          <span className="boot-ring" />
+          <span className="boot-ring is-inner" />
+          <LogoVJ className="h-12 w-12" />
+        </div>
+
+        <p className="font-display text-aurora text-5xl font-black tabular-nums">{pct}%</p>
+
+        <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 transition-all duration-150"
-            style={{ width: `${(lines / BOOT_LINES.length) * 100}%` }}
+            className="h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 shadow-[0_0_12px_rgba(168,85,247,0.8)]"
+            style={{ width: `${pct}%` }}
           />
         </div>
+
+        <div className="mt-6 h-[12rem] w-full font-mono text-xs leading-6 text-cyan-300">
+          {BOOT_STEPS.filter((step) => step.at <= elapsed).map((step) => (
+            <p
+              key={step.text}
+              className={`boot-line ${
+                step.kind === 'title'
+                  ? 'font-display tracking-[0.3em] text-white'
+                  : step.kind === 'welcome'
+                    ? 'text-pink-400'
+                    : step.key && !results[step.key]
+                      ? 'text-slate-400'
+                      : ''
+              }`}
+            >
+              {(step.key && results[step.key]) || step.text}
+            </p>
+          ))}
+        </div>
+
+        <p className="mt-2 text-center font-mono text-[11px] text-slate-500">
+          tip: {tip} · <span className="text-slate-400">press any key to skip</span>
+        </p>
       </div>
     </div>
   )
