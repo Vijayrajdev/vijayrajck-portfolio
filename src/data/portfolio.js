@@ -20,6 +20,12 @@ export const PORTFOLIO_DATA = {
       "GCP Certified ACE",
       "Pipeline Automation Specialist",
     ],
+    // Hero telemetry counters. Project and award counts are derived from the
+    // lists below, so only hand-maintained figures live here.
+    stats: [
+      { value: 3, suffix: "+", label: "Years in data" },
+      { value: 80, suffix: "%", label: "Less manual work" },
+    ],
   },
 
   // The narrative arc: how design became development became autonomy.
